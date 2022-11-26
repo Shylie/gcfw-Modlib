@@ -114,11 +114,11 @@ package Modlib
 							{
 								if (normalTimeUntilNextTargetCheck <= 0)
 								{
-									var shotsLeftThisFrame: Number = speedMultiplier * 2;
+									var normalShotsLeftThisFrame: Number = speedMultiplier * 2;
 									
-									while (shotsLeftThisFrame > 0 && normalCharge >= 100 && normalTimeUntilNextTargetCheck <= 0)
+									while (normalShotsLeftThisFrame > 0 && normalCharge >= 100 && normalTimeUntilNextTargetCheck <= 0)
 									{
-										shotsLeftThisFrame--;
+										normalShotsLeftThisFrame--;
 										
 										normalTargets = acquireNewCreatureTargets(false);
 										if (normalTargets.length == 0)
@@ -149,11 +149,11 @@ package Modlib
 							{
 								if (enhancedTimeUntilNextTargetCheck <= 0)
 								{
-									var shotsLeftThisFrame: Number = speedMultiplier * 2;
+									var enhancedShotsLeftThisFrame: Number = speedMultiplier * 2;
 									
-									while (insertedGem.e_ammoLeft.g() >= 1 && shotsLeftThisFrame > 0 && enhancedCharge >= 100 && enhancedTimeUntilNextTargetCheck <= 0)
+									while (insertedGem.e_ammoLeft.g() >= 1 && enhancedShotsLeftThisFrame > 0 && enhancedCharge >= 100 && enhancedTimeUntilNextTargetCheck <= 0)
 									{
-										shotsLeftThisFrame--;
+										enhancedShotsLeftThisFrame--;
 									
 										enhancedTargets = acquireNewCreatureTargets(true);
 										if (enhancedTargets.length == 0)
