@@ -206,7 +206,7 @@ package Modlib
 			var monster: Monster = target as Monster;
 			
 			var isKillingShot: Boolean = false;
-			var actualDamage: Number = Math.round(insertedGem.sd4_IntensityMod().damageMin.g() * Math.random() * (insertedGem.sd4_IntensityMod.damageMax.g() - insertedGem.sd4_IntensityMod.damageMin.g()));
+			var actualDamage: Number = Math.round(insertedGem.sd4_IntensityMod.damageMin.g() * Math.random() * (insertedGem.sd4_IntensityMod.damageMax.g() - insertedGem.sd4_IntensityMod.damageMin.g()));
 			
 			if (insertedGem.sd4_IntensityMod.calcCritChance.g() > Math.random())
 			{
@@ -275,7 +275,6 @@ package Modlib
 		{
 			if (insertedGem != null)
 			{
-				targets = acquireNewCreatureTargets(false);
 				if (insertedGem.enhancementType != GemEnhancementId.NONE)
 				{
 					normalTargets = acquireNewCreatureTargets(true);
@@ -291,17 +290,17 @@ package Modlib
 		{
 			var newTargets: Array = [];
 			
-			var enh: int = isEnhanced ? insertedGem.enhancementType : GemEnhancementId.NONE;
+			var enhancement: int = isEnhanced ? insertedGem.enhancementType : GemEnhancementId.NONE;
 			
 			var rangeMax: Number = isEnhanced ? Number(insertedGem.sd5_EnhancedOrTrapOrLantern.range.g()) : Number(insertedGem.sd4_IntensityMod.range.g());
 			
-			if (rangeMax > RANGE_MAXIMUM[enh + 1])
+			if (rangeMax > provider.maximumRange(enhancement))
 			{
-				rangeMax = RANGE_MAXIMUM[enh + 1];
+				rangeMax = provider.maximumRange(enhancement);
 			}
 			rangeMax *= rangeMax;
 			
-			var rangeMin: Number = RANGE_MINIMUM[enh + 1];
+			var rangeMin: Number = provider.minimumRange(enhancement);
 			rangeMin *= rangeMin;
 			
 			for (var i: int = 0; i < GV.ingameCore.monstersOnScene.length; i++)
@@ -361,9 +360,9 @@ package Modlib
 				}
 			}
 			
-			if (newTargets.length > maxTargets(enhType))
+			if (newTargets.length > provider.maximumTargets(enhancement))
 			{
-				newTargets.splice(maxTargets(enhType));
+				newTargets.splice(provider.maximumTargets(enhancement));
 			}
 			
 			return newTargets;
@@ -372,7 +371,7 @@ package Modlib
 		public static function doEnterFrameAll(speedMultiplier: Number): void
 		{
 			var moddedBuildings: Array = GV.ingameCore[ModibConstants.MODDED_BUILDING_ARRAY_ID] as Array;
-			for (var i: int = moddedProjectiles.length - 1; i >= 0; i--)
+			for (var i: int = moddedBuildings.length - 1; i >= 0; i--)
 			{
 				ModdedBuilding(moddedBuildings[i]).doEnterFrame(speedMultiplier);
 			}
