@@ -12,7 +12,7 @@ package Modlib
 	 */
 	public class ModlibMod extends MovieClip implements BezelCoreMod 
 	{
-		public function get MOD_NAME(): String { return "Modlib"; }
+		public function get MOD_NAME(): String { return ModlibConstants.MOD_NAME; }
 		public function get VERSION(): String { return "0.1.0"; }
 		
 		CONFIG::debug
@@ -72,10 +72,10 @@ package Modlib
 				' \
 				getlocal0 \n \
 				newarray 0 \n \
-				setproperty QName(PackageNamespace(""), "' + ModibConstants.MODDED_PROJECTILE_ARRAY_ID + '") \n \
+				setproperty QName(PackageNamespace(""), "' + ModlibConstants.MODDED_PROJECTILE_ARRAY_ID + '") \n \
 				getlocal0 \n \
 				newarray0 \n \
-				setproperty QName(PackageNamespace(""), "' + ModibConstants.MODDED_BUILDING_ARRAY_ID + '") \
+				setproperty QName(PackageNamespace(""), "' + ModlibConstants.MODDED_BUILDING_ARRAY_ID + '") \
 				');
 				
 			successfulPatch(CLASS_NAME);
@@ -95,8 +95,8 @@ package Modlib
 			
 			lattice.patchFile(FILE_NAME, offset - 1, 0,
 				' \
-				trait slot QName(PackageNamespace(""), "' + ModibConstants.MODDED_PROJECTILE_ARRAY_ID + '") type QName(PackageNamespace(""), "Array") \n \
-				trait slot QName(PackageNamespace(""), "' + ModibConstants.MODDED_BUILDING_ARRAY_ID + '") type QName(PackageNamespace(""), "Array") \
+				trait slot QName(PackageNamespace(""), "' + ModlibConstants.MODDED_PROJECTILE_ARRAY_ID + '") type QName(PackageNamespace(""), "Array") \n \
+				trait slot QName(PackageNamespace(""), "' + ModlibConstants.MODDED_BUILDING_ARRAY_ID + '") type QName(PackageNamespace(""), "Array") \
 				');
 				
 			const SEARCH_DO_ENTER_FRAME_GENERAL: RegExp = /trait method QName\(PrivateNamespace\("com.giab.games.gcfw.ingame:IngameCore"\), "doEnterFrameGeneral"\)/;

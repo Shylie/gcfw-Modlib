@@ -113,7 +113,7 @@ package Modlib
 						mc = null;
 					}
 					
-					var moddedProjectiles: Array = GV.ingameCore[ModibConstants.MODDED_PROJECTILE_ARRAY_ID] as Array;
+					var moddedProjectiles: Array = GV.ingameCore[ModlibConstants.MODDED_PROJECTILE_ARRAY_ID] as Array;
 					var indexOf: int = moddedProjectiles.indexOf(this);
 					if (indexOf >= 0)
 					{
@@ -132,7 +132,7 @@ package Modlib
 		
 		public static function doEnterFrameAll(speedMultiplier: Number): void
 		{
-			var moddedProjectiles: Array = GV.ingameCore[ModibConstants.MODDED_PROJECTILE_ARRAY_ID] as Array;
+			var moddedProjectiles: Array = GV.ingameCore[ModlibConstants.MODDED_PROJECTILE_ARRAY_ID] as Array;
 			for (var i: int = moddedProjectiles.length - 1; i >= 0; i--)
 			{
 				ModdedProjectile(moddedProjectiles[i]).doEnterFrame(speedMultiplier);

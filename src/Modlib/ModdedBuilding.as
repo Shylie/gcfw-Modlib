@@ -197,7 +197,9 @@ package Modlib
 			var projectileProvider: IModdedProjectileImplProvider = provider.projectile(enhancement);
 			var shotData: ShotData = (enhancement == GemEnhancementId.NONE ? insertedGem.sd4_IntensityMod : insertedGem.sd5_EnhancedOrTrapOrLantern);
 			
-			return new ModdedProjectile(projectileProvider, this, shotData, target, rawDamage, markableForDeath, isKillingShot, provider.isRawDamage(enhancement));
+			var projectile: ModdedProjectile = new ModdedProjectile(projectileProvider, this, shotData, target, rawDamage, markableForDeath, isKillingShot, provider.isRawDamage(enhancement));
+			
+			Array(GV.ingameCore[ModlibConstants.MODDED_PROJECTILE_ARRAY_ID]).push(projectile);
 		}
 		
 		// TODO: return boolean and only retarget if one or more dies
@@ -370,7 +372,7 @@ package Modlib
 		
 		public static function doEnterFrameAll(speedMultiplier: Number): void
 		{
-			var moddedBuildings: Array = GV.ingameCore[ModibConstants.MODDED_BUILDING_ARRAY_ID] as Array;
+			var moddedBuildings: Array = GV.ingameCore[ModlibConstants.MODDED_BUILDING_ARRAY_ID] as Array;
 			for (var i: int = moddedBuildings.length - 1; i >= 0; i--)
 			{
 				ModdedBuilding(moddedBuildings[i]).doEnterFrame(speedMultiplier);
