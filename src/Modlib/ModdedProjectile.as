@@ -103,7 +103,8 @@ package Modlib
 		{
 			if (speedMultiplier > 0)
 			{
-				if (provider.hit)
+				provider.update(this);
+				if (provider.hit(this))
 				{
 					if (isRawDamage)
 					{
@@ -133,10 +134,6 @@ package Modlib
 							moddedProjectiles[indexOf] = moddedProjectiles.pop();
 						}
 					}
-				}
-				else
-				{
-					provider.updateMC(this);
 				}
 			}
 		}

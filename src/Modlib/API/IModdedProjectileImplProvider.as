@@ -9,19 +9,19 @@ package Modlib.API
 	public interface IModdedProjectileImplProvider 
 	{
 		/**
-		 * Should the projectile should hit its target
-		 */
-		function get hit(): Boolean;
-		
-		/**
 		 * Returns a new instance of the projectile's MovieClip
 		 */
 		function get mc(): MovieClip;
 		
 		/**
-		 * Update the MovieClip of the projectile
+		 * Should the projectile should hit its target
+		 */
+		function hit(projectile: ModdedProjectile): Boolean;
+		
+		/**
+		 * Update the projectile
 		 * @param projectile
 		 */
-		function updateMC(projectile: ModdedProjectile): void
+		function update(projectile: ModdedProjectile): void
 	}
 }
