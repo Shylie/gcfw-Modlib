@@ -79,7 +79,7 @@
     <hidden path="obj" />
   </hiddenPaths>
   <!-- Executed before build -->
-  <preBuildCommand>"$(BaseDir)\Tools\swcbuild\swcbuild.exe" "$(ProjectPath)" "-compiler=$(CompilerPath)" "-debug=$(BuildConfig)" "-library=C:\Users\fuzzc\Documents\Programming\gc\flashdevelop\Library" -asdoc=true -keep-asdoc=false</preBuildCommand>
+  <preBuildCommand>"$(BaseDir)\Tools\swcbuild\swcbuild.exe" "$(ProjectPath)" "-compiler=$(CompilerPath)" "-debug=$(BuildConfig)" "-library=%FlashDevelop%\Library" -asdoc=true -keep-asdoc=false</preBuildCommand>
   <!-- Executed after build -->
   <postBuildCommand alwaysRun="False" />
   <!-- Other project options -->
