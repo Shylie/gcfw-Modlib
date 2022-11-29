@@ -16,7 +16,12 @@ package Modlib
 		 */
 		public static function registerBuilding(buildingProvider: Object, name: String): void
 		{
-			BUILDING_REGISTRY.push(new RegistryEntry(buildingProvider, name));
+			BUILDING_REGISTRY.register(new RegistryEntry(buildingProvider, name));
+		}
+		
+		public static function unregisterBuilding(name: String): void
+		{
+			BUILDING_REGISTRY.unregister(name);
 		}
 		
 		internal function getEntry(id: int): Object
@@ -29,10 +34,28 @@ package Modlib
 			return entries.length;
 		}
 		
-		private function push(entry: Object): void
+		private function register(entry: Object): void
 		{
 			entries.push(entry);
 			entries.sortOn(["name"]);
+		}
+		
+		private function unregister(name: String): void
+		{
+			for (var i: int = 0; i < entries.length; i++)
+			{
+				if (name == (entries[i] as RegistryEntry).name)
+				{
+					if (i == entries.length - 1)
+					{
+						entries.pop();
+					}
+					else
+					{
+						entries[i] = entries.pop();
+					}
+				}
+			}
 		}
 	}
 }
