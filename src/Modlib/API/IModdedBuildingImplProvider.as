@@ -1,11 +1,28 @@
 package Modlib.API 
 {
+	import flash.display.MovieClip;
+	
 	/**
 	 * ...
 	 * @author Shy
 	 */
 	public interface IModdedBuildingImplProvider 
 	{
+		/**
+		 * The MovieClip instance for this building type
+		 */
+		function get mc(): MovieClip;
+		
+		/**
+		 * The base building cost of this building type
+		 */
+		function get buildCostBase(): Number;
+		
+		/**
+		 * The amount the building cost increases every time this building type is built
+		 */
+		function get buildCostIncrease(): Number;
+		
 		/**
 		 * Get the damage multiplier for a given enhancement type
 		 * @param enhancement Type of enhancement to get stats for

@@ -1,39 +1,32 @@
 package Modlib 
 {
-	import Modlib.API.IModdedBuildingImplProvider;
 	import Modlib.API.IModdedProjectileImplProvider;
 	import com.giab.common.utils.ArrayToolbox;
+	import com.giab.common.utils.ColorToolbox;
 	import com.giab.games.gcfw.GV;
-	import com.giab.games.gcfw.constants.GameMode;
+	import com.giab.games.gcfw.SB;
+	import com.giab.games.gcfw.constants.ActionStatus;
+	import com.giab.games.gcfw.constants.BuildingType;
 	import com.giab.games.gcfw.constants.GemEnhancementId;
 	import com.giab.games.gcfw.constants.IngameStatus;
 	import com.giab.games.gcfw.constants.TargetPriorityId;
-	import com.giab.games.gcfw.entity.Barricade;
-	import com.giab.games.gcfw.entity.Beacon;
-	import com.giab.games.gcfw.entity.DropHolder;
-	import com.giab.games.gcfw.entity.GateKeeperFang;
 	import com.giab.games.gcfw.entity.Gem;
-	import com.giab.games.gcfw.entity.GemSeal;
-	import com.giab.games.gcfw.entity.JarOfWasps;
-	import com.giab.games.gcfw.entity.ManaShard;
 	import com.giab.games.gcfw.entity.Monster;
-	import com.giab.games.gcfw.entity.MonsterNest;
-	import com.giab.games.gcfw.entity.PossessionObelisk;
-	import com.giab.games.gcfw.entity.Pylon;
-	import com.giab.games.gcfw.entity.SleepingHive;
-	import com.giab.games.gcfw.entity.Tomb;
-	import com.giab.games.gcfw.entity.WatchTower;
-	import com.giab.games.gcfw.entity.WizLock;
-	import com.giab.games.gcfw.entity.WizardStash;
+	import com.giab.games.gcfw.entity.Orblet;
+	import com.giab.games.gcfw.entity.Wall;
 	import com.giab.games.gcfw.mcDyn.McChargeMeter;
 	import com.giab.games.gcfw.struct.ShotData;
+	import flash.geom.ColorTransform;
+	import flash.geom.Matrix;
+	import flash.geom.Rectangle;
+	
 	/**
 	 * ...
 	 * @author Shy
 	 */
 	public class ModdedBuilding
 	{
-		private var provider: IModdedBuildingImplProvider;
+		private var provider: Object;
 		
 		public var x: int;
 		public var y: int;
@@ -42,10 +35,8 @@ package Modlib
 		public var fieldY: int;
 		
 		public var shotColor: Array;
+		public var ctrShot: ColorTransform;
 		public var mcChargeMeter: McChargeMeter;
-		public var mossAlpha: Number;
-		public var mossHue: Number;
-		public var snowAlpha: Number;
 		
 		public var insertedGem: Gem;
 		
@@ -60,9 +51,278 @@ package Modlib
 		public var enhancedTimeUntilNextTargetCheck: Number;
 		public var enhancedTargets: Array;
 		
-		public function ModdedBuilding(provider: IModdedBuildingImplProvider, fieldX: int, fieldY: int, mossAlpha: Number = 0, mossHue: Number = 0, snowAlpha: Number = 0)
+		public static function initiateCastBuild(offset: int): Boolean
 		{
-			this.provider = provider;
+			if (ModlibMod.instance.buildingPageIndex == 0)
+			{
+				return false;
+			}
+			
+			var provider: int = ModlibMod.instance.buildingPageIndex * 5 + offset;
+			if (provider >= 0 && provider < Registry.BUILDING_REGISTRY.entryCount)
+			{
+				if (GV.ingameCore.actionStatus - 1000 == provider)
+				{
+					GV.ingameController.deselectEverything(false, false);
+					GV.ingameCore.initializer2.resetCastButtons();
+					GV.ingameCore.actionStatus = ActionStatus.IDLE;
+				}
+				else 
+				{
+					GV.ingameController.deselectEverything(true, true);
+					if (GV.ingameCore.getMana() < GV.ingameCore[Constants.MODDED_BUILDING_COSTS_ID][provider] as Number)
+					{
+						SB.playSound("sndalert");
+						GV.vfxEngine.createFloatingText4(GV.main.mouseX, GV.main.mouseY < 60 ? GV.main.mouseY + 30 : GV.main.mouseY - 20, "Not enough mana", 16768392, 12, "center", Math.random() * 3 - 1.5, -4 - Math.random() * 3, 0, 0.55, 12, 0, 10000);
+					}
+					
+					GV.ingameCore.cnt.mcIngameFrame.buildButtons[offset + 1].frameSelected.visible = true;
+					GV.ingameCore.cnt.mcIngameFrame.buildButtons[offset + 1].parent.addChild(GV.ingameCore.cnt.mcIngameFrame.buildButtons[offset + 1]);
+					SB.playSound("sndspellinitiate");
+					GV.ingameCore.cnt.cntRetinaHud.addChild(GV.ingameCore.cnt.bmpTowerPlaceAvailMap);
+					GV.ingameCore.cnt.cntRetinaHud.addChild(GV.ingameCore.cnt.bmpNoPlaceBeaconAvailMap);
+					GV.ingameCore.actionStatus = provider + 1000;
+				}
+			}
+			
+			return true;
+		}
+		
+		public static function doEnterFrameAll(speedMultiplier: Number): void
+		{
+			var moddedBuildings: Array = GV.ingameCore[Constants.MODDED_BUILDING_ARRAY_ID] as Array;
+			for (var i: int = moddedBuildings.length - 1; i >= 0; i--)
+			{
+				(moddedBuildings[i] as ModdedBuilding).doEnterFrame(speedMultiplier);
+			}
+		}
+		
+		public static function render(i: int, j: int, building: Object): void
+		{
+			var moddedBuilding: ModdedBuilding = building as ModdedBuilding;
+			
+			if (moddedBuilding != null)
+			{
+				GV.ingameCore.cnt.bmpdBuildings.draw(moddedBuilding.provider.mc, new Matrix(1, 0, 0, 1, 28 * j, 28 * i));
+			}
+		}
+		
+		public static function build(x: int, y: int): void
+		{
+			var provider: int = GV.ingameCore.actionStatus - 1000;
+			if (!checkProvider(provider))
+			{
+				return;
+			}
+			
+			var actualProvider: Object = Registry.BUILDING_REGISTRY.getEntry(provider);
+			
+			if (GV.ingameController.isBuildingBuildPointFree(x, y, BuildingType.TOWER))
+			{
+				if (GV.ingameCore.getMana() < GV.ingameCore[Constants.MODDED_BUILDING_COSTS_ID][provider] as Number)
+				{
+					SB.playSound("sndalert");
+					GV.vfxEngine.createFloatingText4(GV.main.mouseX, GV.main.mouseY < 60 ? GV.main.mouseY + 30 : GV.main.mouseY - 20, "Not enough mana", 16768392, 12, "center", Math.random() * 3 - 1.5, -4 - Math.random() * 3, 0, 0.55, 12, 0, 10000);
+					GV.ingameController.deselectEverything(false, false);
+				}
+				else if (GV.ingameCalculator.isNew2x2BuildingBlocking(x, y))
+				{
+					if (GV.ingameCore.freeBuildingsLeft.g() > 0.5)
+					{
+						GV.ingameCore.freeBuildingsLeft.s(GV.ingameCore.freeBuildingsLeft.g() - 1);
+					}
+					else
+					{
+						GV.ingameCore.changeMana(-Math.max(0, GV.ingameCore[Constants.MODDED_BUILDING_COSTS_ID][provider] as Number), false, true);
+					}
+					GV.ingameCore[Constants.MODDED_BUILDING_COSTS_ID][provider] += actualProvider.buildCostIncrease();
+					
+					GV.ingameCreator.dfBeaconPlacement = true;
+					
+					for (var dx: int = 0; dx < 2; dx++)
+					{
+						for (var dy: int = 0; dy < 2; dy++)
+						{
+							if (x + dx >= 60 || y + dy >= 38)
+							{
+								continue;
+							}
+							
+							var wall: Wall = GV.ingameCore.buildingAreaMatrix[y + dy][x + dx] as Wall;
+							if (wall != null)
+							{
+								var indexOf: int = GV.ingameCore.walls.indexOf(wall);
+								if (indexOf == GV.ingameCore.walls.length - 1)
+								{
+									GV.ingameCore.walls.pop();
+								}
+								else
+								{
+									GV.ingameCore.walls[indexOf] = GV.ingameCore.walls.pop();
+								}
+							}
+						}
+					}
+					
+					var moddedBuilding: ModdedBuilding = new ModdedBuilding(provider, x, y);
+					(GV.ingameCore[Constants.MODDED_BUILDING_ARRAY_ID] as Array).push(moddedBuilding);
+					
+					GV.ingameCore.buildingAreaMatrix[y][x] = moddedBuilding;
+					GV.ingameCore.buildingAreaMatrix[y + 1][x] = moddedBuilding;
+					GV.ingameCore.buildingAreaMatrix[y][x + 1] = moddedBuilding;
+					GV.ingameCore.buildingAreaMatrix[y + 1][x + 1] = moddedBuilding;
+					
+					GV.ingameCore.buildingRegPtMatrix[y][x] = moddedBuilding;
+					GV.ingameCore.buildingRegPtMatrix[y + 1][x] = null;
+					GV.ingameCore.buildingRegPtMatrix[y][x + 1] = null;
+					GV.ingameCore.buildingRegPtMatrix[y + 1][x + 1] = null;
+					
+					GV.vfxEngine.createTowerBuildSmoke(28 + 28 * x, 28 + 28 * y);
+					SB.playSound("sndbuildtower");
+					
+					var rect: Rectangle = new Rectangle(x, y, 2, 2);
+					GV.ingameCore.cnt.bmpdTowerPlaceAvailMap.fillRect(rect, 2952790016);
+					GV.ingameCore.cnt.bmpdWallPlaceAvailMap.fillRect(rect, 2952790016);
+					GV.ingameCore.cnt.bmpdTrapPlaceAvailMap.fillRect(rect, 2952790016);
+					
+					GV.ingameRenderer2.redrawHighBuildings();
+					GV.ingameRenderer2.redrawWalls();
+					
+					if (GV.ingameCore.groundMatrix[y][x] == "#" || GV.ingameCore.groundMatrix[y + 1][x] == "#" || GV.ingameCore.groundMatrix[y][x + 1] == "#" || GV.ingameCore.groundMatrix[y + 1][x + 1] == "#")
+					{
+						GV.ingameCore.resetAllPNNMatrices();
+					}
+					
+					for (var mi: int = GV.ingameCore.monstersOnScene.length - 1; mi >= 0; mi--)
+					{
+						var monster: Monster = GV.ingameCore.monstersOnScene[mi] as Monster;
+						if (monster == null)
+						{
+							if (mi == GV.ingameCore.monstersOnScene.length - 1)
+							{
+								GV.ingameCore.monstersOnScene.pop();
+							}
+							else
+							{
+								GV.ingameCore.monstersOnScene[mi] = GV.ingameCore.monstersOnScene.pop();
+							}
+						}
+						else
+						{
+							monster.getNextPatrolSector();
+						}
+					}
+					
+					for (var oi: int = 0; oi < GV.ingameCore.orblets.length; oi++)
+					{
+						var orblet: Orblet = GV.ingameCore.orblets[oi] as Orblet;
+						if (orblet.status == Orblet.ST_DROPPED)
+						{
+							orblet.getNextPatrolSector();
+						}
+					}
+					
+					if (GV.ingameCore.getMana() < GV.ingameCore[Constants.MODDED_BUILDING_COSTS_ID][provider] as Number && GV.ingameCore.freeBuildingsLeft.g() < 0.5)
+					{
+						GV.ingameController.deselectEverything(false, false);
+					}
+				}
+			}
+			else
+			{
+				SB.playSound("sndalert");
+				GV.vfxEngine.createFloatingText4(GV.main.mouseX, GV.main.mouseY < 60 ? GV.main.mouseY + 30 : GV.main.mouseY - 20, "Can't build", 16768392, 12, "center", Math.random() * 3 - 1.5, -4 - Math.random() * 3, 0, 0.55, 12, 0, 10000);
+			}
+		}
+		
+		public static function destroy(building: Object, x: int, y: int, isByPlayer: Boolean, isByEnemy: Boolean): Boolean
+		{
+			var moddedBuilding: ModdedBuilding = building as ModdedBuilding;
+			if (moddedBuilding == null)
+			{
+				return false;
+			}
+			else
+			{
+				if (moddedBuilding.insertedGem == GV.ingameCore.draggedGem && !isByPlayer)
+				{
+					GV.ingameController.deselectEverything(true, true);
+				}
+				
+				if (moddedBuilding.insertedGem == null || !isByPlayer)
+				{
+					if (moddedBuilding.insertedGem != null)
+					{
+						GV.ingameCore.cnt.cntDraggedGem.removeChild(moddedBuilding.insertedGem.mc);
+						GV.ingameCore.cnt.cntGemsInInventory.removeChild(moddedBuilding.insertedGem.mc);
+						GV.ingameCore.cnt.cntGemsInTowers.removeChild(moddedBuilding.insertedGem.mc);
+						GV.ingameCore.cnt.cntGemInEnragingSlot.removeChild(moddedBuilding.insertedGem.mc);
+						GV.ingameCore.cnt.cntRetinaHud.removeChild(moddedBuilding.insertedGem.mc);
+						
+						var indexOfG: int = GV.ingameCore.gems.indexOf(moddedBuilding.insertedGem);
+						if (indexOfG != -1)
+						{
+							if (indexOfG == GV.ingameCore.gems.length - 1)
+							{
+								GV.ingameCore.gems.pop();
+							}
+							else
+							{
+								GV.ingameCore.gems[indexOfG] = GV.ingameCore.gems.pop();
+							}
+							
+							if (isByEnemy)
+							{
+								GV.ingameStats.gemsLost++;
+							}
+							
+							moddedBuilding.insertedGem.removeData();
+						}
+					}
+					
+					var moddedBuildings: Array = GV.ingameCore[Constants.MODDED_BUILDING_ARRAY_ID] as Array
+					var indexOfB: int = moddedBuildings.indexOf(moddedBuilding);
+					if (indexOfB != -1)
+					{
+						if (indexOfB == moddedBuildings.length - 1)
+						{
+							moddedBuildings.pop();
+						}
+						else
+						{
+							moddedBuildings[indexOfB] = moddedBuildings.pop();
+						}
+					}
+					
+					GV.ingameDestroyer.clearAvailMaps2x2(x, y);
+			
+					return true;
+				}
+				
+				return false;
+			}
+		}
+		
+		internal static function resetBuildCosts(): void
+		{
+			var tempCosts: Array = [];
+			
+			for (var i: int = 0; i < Registry.BUILDING_REGISTRY.entryCount; i++)
+			{
+				tempCosts.push(Registry.BUILDING_REGISTRY.getEntry(i).buildCostBase);
+			}
+			
+			GV.ingameCore[Constants.MODDED_BUILDING_COSTS_ID] = tempCosts;
+		}
+		
+		private static function checkProvider(provider: int): Boolean
+		{
+			return provider >= 0 && provider < Registry.BUILDING_REGISTRY.entryCount;
+		}
+		
+		public function ModdedBuilding(provider: int, fieldX: int, fieldY: int)
+		{
+			this.provider = Registry.BUILDING_REGISTRY.getEntry(provider);
 			
 			this.fieldX = fieldX;
 			this.fieldY = fieldY;
@@ -76,10 +336,6 @@ package Modlib
 			mcChargeMeter.y = y - 28 + 8;
 			
 			mcChargeMeter.fullCharge.visible = false;
-			
-			this.mossAlpha = mossAlpha;
-			this.mossHue = mossHue;
-			this.snowAlpha = snowAlpha;
 		}
 		
 		public function doEnterFrame(speedMultiplier: Number): void
@@ -192,14 +448,77 @@ package Modlib
 			}
 		}
 		
-		private function createProjectile(enhancement: int, target: Object, rawDamage: Number, shotColor: Array, markableForDeath: Boolean, isKillingShot: Boolean): ModdedProjectile
+		public function removeGem(): void
+		{
+			if (insertedGem != null)
+			{
+				GV.ingameCore.cnt.cntRetinaHud.removeChild(mcChargeMeter);
+				insertedGem.containingBuilding = null;
+				insertedGem.recalculateSds();
+				insertedGem = null;
+				GV.ingameStats.gemsOnTheField--;
+			}
+		}
+		
+		public function insertGem(gem: Gem, skipCooldown: Boolean = false): void
+		{
+			if (gem != null)
+			{
+				if (insertedGem != null)
+				{
+					removeGem();
+				}
+				
+				insertedGem = gem;
+				insertedGem.containingBuilding = this;
+				insertedGem.showInTower();
+				insertedGem.xInBuilding = x;
+				insertedGem.yInBuilding = y;
+				
+				if (skipCooldown)
+				{
+					cooldownTimer = 0;
+					isCoolingDown = false;
+					GV.ingameCore.cnt.cntRetinaHud.removeChild(mcChargeMeter);
+				}
+				else
+				{
+					cooldownTimer = 100;
+					isCoolingDown = true;
+					GV.ingameCore.cnt.cntRetinaHud.addChild(mcChargeMeter);
+					mcChargeMeter.gotoAndStop(1);
+				}
+				
+				insertedGem.dropAnimFrame = 10;
+				
+				positionGem();
+				
+				GV.ingameController.cnt.cntGemsInTowers.addChild(insertedGem.mc);
+				GV.ingameCalculator.amplifyGem(insertedGem, fieldX, fieldY, false);
+				
+				shotColor = ColorToolbox.hsbToRgb(insertedGem.hasColor ? [insertedGem.hueMain, 100, 100] : [0, 0, 100]);
+				ctrShot = new ColorTransform(0, 0, 0, 1, shotColor[0], shotColor[1], shotColor[2], 0);
+				
+				normalCharge = 0;
+				normalTimeUntilNextTargetCheck = 0;
+				
+				enhancedCharge = 0;
+				enhancedTimeUntilNextTargetCheck = 0;
+				
+				insertedGem.recalculateSds();
+				
+				GV.ingameStats.gemsOnTheField++;
+			}
+		}
+		
+		private function createProjectile(enhancement: int, target: Object, rawDamage: Number, shotColor: Array, markableForDeath: Boolean, isKillingShot: Boolean): void
 		{
 			var projectileProvider: IModdedProjectileImplProvider = provider.projectile(enhancement);
 			var shotData: ShotData = (enhancement == GemEnhancementId.NONE ? insertedGem.sd4_IntensityMod : insertedGem.sd5_EnhancedOrTrapOrLantern);
 			
-			var projectile: ModdedProjectile = new ModdedProjectile(projectileProvider, this, shotData, target, rawDamage, markableForDeath, isKillingShot, provider.isRawDamage(enhancement));
+			var projectile: ModdedProjectile = new ModdedProjectile(projectileProvider, this, shotColor, shotData, target, rawDamage, markableForDeath, isKillingShot, provider.isRawDamage(enhancement));
 			
-			Array(GV.ingameCore[ModlibConstants.MODDED_PROJECTILE_ARRAY_ID]).push(projectile);
+			(GV.ingameCore[Constants.MODDED_PROJECTILE_ARRAY_ID] as Array).push(projectile);
 		}
 		
 		// TODO: return boolean and only retarget if one or more dies
@@ -370,12 +689,14 @@ package Modlib
 			return newTargets;
 		}
 		
-		public static function doEnterFrameAll(speedMultiplier: Number): void
+		private function positionGem(param: Boolean = false): void
 		{
-			var moddedBuildings: Array = GV.ingameCore[ModlibConstants.MODDED_BUILDING_ARRAY_ID] as Array;
-			for (var i: int = moddedBuildings.length - 1; i >= 0; i--)
+			insertedGem.mc.x = x - 2 + 50;
+			insertedGem.mcDropAnimTargetY = insertedGem.mc.y = this.y - 2.5 + 8
+			
+			if (param)
 			{
-				ModdedBuilding(moddedBuildings[i]).doEnterFrame(speedMultiplier);
+				insertedGem.dropAnimFrame = 10;
 			}
 		}
 	}

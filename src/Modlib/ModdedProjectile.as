@@ -1,6 +1,7 @@
 package Modlib 
 {
 	import Modlib.API.IModdedProjectileImplProvider;
+	import com.giab.common.utils.ColorToolbox;
 	import com.giab.games.gcfw.GV;
 	import com.giab.games.gcfw.entity.Apparition;
 	import com.giab.games.gcfw.entity.Beacon;
@@ -17,13 +18,14 @@ package Modlib
 	import com.giab.games.gcfw.struct.ShotData;
 	import flash.display.MovieClip;
 	import flash.geom.ColorTransform;
+	
 	/**
 	 * ...
 	 * @author Shy
 	 */
 	public class ModdedProjectile 
 	{
-		private var provider: IModdedProjectileImplProvider;
+		private var provider: Object;
 		
 		public var mc: MovieClip;
 		public var shotData: ShotData;
@@ -37,13 +39,28 @@ package Modlib
 		public var damage: Number;
 		public var isRawDamage: Boolean;
 		
-		public function ModdedProjectile(provider: IModdedProjectileImplProvider, building: ModdedBuilding, shotData: ShotData, target: Object, damage: Number, targetMarkableForDeath: Boolean, killingShot: Boolean, rawDamage: Boolean)
+		public static function doEnterFrameAll(speedMultiplier: Number): void
+		{
+			var moddedProjectiles: Array = GV.ingameCore[Constants.MODDED_PROJECTILE_ARRAY_ID] as Array;
+			for (var i: int = moddedProjectiles.length - 1; i >= 0; i--)
+			{
+				(moddedProjectiles[i] as ModdedProjectile).doEnterFrame(speedMultiplier);
+			}
+		}
+		
+		public function ModdedProjectile(provider: Object, building: ModdedBuilding, shotColor: Array, shotData: ShotData, target: Object, damage: Number, targetMarkableForDeath: Boolean, killingShot: Boolean, rawDamage: Boolean)
 		{
 			this.provider = provider;
 			
 			isKillingShot = killingShot;
 			isTargetMarkableForDeath = targetMarkableForDeath;
+			
 			this.mc = provider.mc;
+			if (building.insertedGem.hasColor)
+			{
+				mc.filters = ColorToolbox.calculateColorMatrixFilter(ColorToolbox.rgbToHsb(shotColor));
+			}
+			
 			this.shotData = shotData;
 			originGem = building.insertedGem;
 			this.target = target;
@@ -113,7 +130,7 @@ package Modlib
 						mc = null;
 					}
 					
-					var moddedProjectiles: Array = GV.ingameCore[ModlibConstants.MODDED_PROJECTILE_ARRAY_ID] as Array;
+					var moddedProjectiles: Array = GV.ingameCore[Constants.MODDED_PROJECTILE_ARRAY_ID] as Array;
 					var indexOf: int = moddedProjectiles.indexOf(this);
 					if (indexOf >= 0)
 					{
@@ -127,15 +144,6 @@ package Modlib
 						}
 					}
 				}
-			}
-		}
-		
-		public static function doEnterFrameAll(speedMultiplier: Number): void
-		{
-			var moddedProjectiles: Array = GV.ingameCore[ModlibConstants.MODDED_PROJECTILE_ARRAY_ID] as Array;
-			for (var i: int = moddedProjectiles.length - 1; i >= 0; i--)
-			{
-				ModdedProjectile(moddedProjectiles[i]).doEnterFrame(speedMultiplier);
 			}
 		}
 	}
