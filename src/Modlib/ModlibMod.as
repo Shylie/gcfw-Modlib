@@ -348,7 +348,6 @@ package Modlib
 				getproperty QName(PackageNamespace(""), "applicationDomain") \n \
 				pushstring "Modlib.ModdedBuilding" \n \
 				callproperty QName(PackageNamespace(""), "getDefinition"), 1 \n \
-				subtract \n \
 				getlocal 4 \n \
 				getlocal 5 \n \
 				callpropvoid QName(PackageNamespace(""), "build"), 2 \
