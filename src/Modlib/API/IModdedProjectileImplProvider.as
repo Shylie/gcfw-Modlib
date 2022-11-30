@@ -1,7 +1,7 @@
 package Modlib.API 
 {
 	import Modlib.ModdedProjectile;
-	import flash.display.MovieClip;
+	import flash.display.DisplayObject;
 	
 	/**
 	 * ...
@@ -12,7 +12,7 @@ package Modlib.API
 		/**
 		 * Returns a new instance of the projectile's MovieClip
 		 */
-		function get mc(): MovieClip;
+		function get mc(): DisplayObject;
 		
 		/**
 		 * Should the projectile should hit its target

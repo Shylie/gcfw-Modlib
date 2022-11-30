@@ -56,9 +56,10 @@ package Modlib
 			isTargetMarkableForDeath = targetMarkableForDeath;
 			
 			this.mc = provider.mc;
-			if (building.insertedGem.hasColor)
+			if (mc != null && building.insertedGem.hasColor)
 			{
 				mc.filters = ColorToolbox.calculateColorMatrixFilter(ColorToolbox.rgbToHsb(shotColor));
+				GV.ingameController.cnt.cntShots.addChild(mc);
 			}
 			
 			this.shotData = shotData;
@@ -100,11 +101,6 @@ package Modlib
 			{
 				targetOffsetX = 50 + Math.random() * 8 - 4;
 				targetOffsetY = 8 + Math.random() * 8 - 4;
-			}
-			
-			if (mc != null)
-			{
-				GV.ingameController.cnt.cntShots.addChild(this.mc);
 			}
 		}
 		

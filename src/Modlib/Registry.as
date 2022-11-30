@@ -11,16 +11,28 @@ package Modlib
 		private var entries: Array = []
 		
 		/**
-		 * Register a building/projectile pair.
+		 * Register a building
 		 * @param buildingProvider The building provider to register. Must adhere to Modlib.API.IModdedBuildingImplProvider
 		 */
 		public static function registerBuilding(buildingProvider: Object, name: String): void
 		{
+			CONFIG::debug
+			{
+				ModlibMod.instance.logger.log("", "Registering building: " + name);
+			}
 			BUILDING_REGISTRY.register(new RegistryEntry(buildingProvider, name));
 		}
 		
+		/**
+		 * Unregister a building
+		 * @param name The name of the building to unregister.
+		 */
 		public static function unregisterBuilding(name: String): void
 		{
+			CONFIG::debug
+			{
+				ModlibMod.instance.logger.log("", "Unregistering building: " + name);
+			}
 			BUILDING_REGISTRY.unregister(name);
 		}
 		

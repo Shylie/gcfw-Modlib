@@ -15,6 +15,13 @@ package Modlib
 		public static const MODDED_BUILDING_ARRAY_ID: String = "moddedBuildings";
 		public static const MODDED_BUILDING_COSTS_ID: String = "moddedBuildingCosts";
 		
+		public static const SELECTED_MODDED_BUILDING_ID: String = "selectedModdedBuilding";
+		
+		public static const BUILDING_REGISTRY_ACTION_STATUS_OFFSET: int = 1500;
+		public static const ACTIONSTATUS_DRAGGING_GEM_FROM_MODDEDBUILDING_TO_COMBINE: int = 1000;
+		public static const ACTIONSTATUS_DRAGGING_GEM_FROM_MODDEDBUILDING_TO_THROW: int = 1001;
+		public static const ACTIONSTATUS_DRAGGING_GEM_FROM_MODDEDBUILDING_IDLE: int = 1002;
+		
 		public function Constants() { }
 	}
 }

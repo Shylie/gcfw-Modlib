@@ -61,6 +61,8 @@ package Modlib
 		
 		public function loadCoreMod(lattice: Lattice): void 
 		{
+			installIngameSpellCasterCoremod(lattice);
+			installIngameControllerCoremod(lattice);
 			installIngameDestroyerCoremod(lattice);
 			installIngameInputHandlerCoremod(lattice);
 			installIngameInputHandler2Coremod(lattice);
@@ -83,8 +85,8 @@ package Modlib
 		
 		private function registerKeybinds(): void
 		{
-			bezel.keybindManager.registerHotkey(Constants.BUILDING_PAGE_DOWN_KEYBIND_ID, new Keybind("period"));
-			bezel.keybindManager.registerHotkey(Constants.BUILDING_PAGE_UP_KEYBIND_ID, new Keybind("slash"));
+			bezel.keybindManager.registerHotkey(Constants.BUILDING_PAGE_DOWN_KEYBIND_ID, new Keybind("quote"));
+			bezel.keybindManager.registerHotkey(Constants.BUILDING_PAGE_UP_KEYBIND_ID, new Keybind("semicolon"));
 		}
 		
 		private function ehIngameNewScene(event: IngameNewSceneEvent): void
@@ -112,6 +114,95 @@ package Modlib
 			}
 		}
 		
+		private function installIngameSpellCasterCoremod(lattice: Lattice): void
+		{
+			const FILE_NAME: String = "com/giab/games/gcfw/ingame/IngameSpellCaster.class.asasm";
+			const CLASS_NAME: String = "IngameSpellCaster";
+			
+			const SEARCH_CAST_GEM_BOMB: RegExp = /trait method QName\(PackageNamespace\(""\), "castGemBomb"\)/;
+			var offset: int = lattice.findPattern(FILE_NAME, SEARCH_CAST_GEM_BOMB);
+			if (checkOffset(offset, CLASS_NAME, SEARCH_CAST_GEM_BOMB))
+			{
+				return;
+			}
+			
+			const SEARCH_GETLEX_WALL: RegExp = /getlex QName\(PackageNamespace\("com.giab.games.gcfw.entity"\), "Wall"\)/;
+			offset = lattice.findPattern(FILE_NAME, SEARCH_GETLEX_WALL, offset);
+			if (checkOffset(offset, CLASS_NAME, SEARCH_GETLEX_WALL))
+			{
+				return;
+			}
+			
+			lattice.patchFile(FILE_NAME, offset - 2, 0, 'jump skiptypecheck');
+			
+			const SEARCH_GETPROPERTY_DEMOLITIONS_LEFT: RegExp = /getproperty QName\(PackageNamespace\(""\), "demolitionsLeft"\)/;
+			offset = lattice.findPattern(FILE_NAME, SEARCH_GETPROPERTY_DEMOLITIONS_LEFT, offset);
+			if (checkOffset(offset, CLASS_NAME, SEARCH_GETPROPERTY_DEMOLITIONS_LEFT))
+			{
+				return;
+			}
+			
+			lattice.patchFile(FILE_NAME, offset - 3, 0, 'skiptypecheck:');
+			
+			successfulPatch(CLASS_NAME);
+		}
+		
+		private function installIngameControllerCoremod(lattice: Lattice): void
+		{
+			const FILE_NAME: String = "com/giab/games/gcfw/ingame/IngameController.class.asasm";
+			const CLASS_NAME: String = "IngameController";
+			
+			const SEARCH_GET_GEM_UNDER_POINTER: RegExp = /trait method QName\(PackageNamespace\(""\), "getGemUnderPointer"\)/;
+			var offset: int = lattice.findPattern(FILE_NAME, SEARCH_GET_GEM_UNDER_POINTER);
+			if (checkOffset(offset, CLASS_NAME, SEARCH_GET_GEM_UNDER_POINTER))
+			{
+				return;
+			}
+			
+			const SEARCH_GETLEX_TOWER: RegExp = /getlex QName\(PackageNamespace\("com.giab.games.gcfw.entity"\), "Tower"\)/;
+			offset = lattice.findPattern(FILE_NAME, SEARCH_GETLEX_TOWER, offset);
+			if (checkOffset(offset, CLASS_NAME, SEARCH_GETLEX_TOWER))
+			{
+				return;
+			}
+			
+			lattice.patchFile(FILE_NAME, offset - 2, 0,
+				' \
+				getlocal0 \n \
+				getproperty QName(PackageNamespace(""), "core") \n \
+				pushnull \n \
+				setproperty QName(PackageNamespace(""), "' + Constants.SELECTED_MODDED_BUILDING_ID + '") \n \
+				getlex QName(PackageNamespace("com.giab.games.gcfw"), "GV") \n \
+				getproperty QName(PackageNamespace(""), "main") \n \
+				getproperty QName(PackageNamespace(""), "bezel") \n \
+				pushstring "' + MOD_NAME + '" \n \
+				callproperty QName(PackageNamespace(""), "getModByName"), 1 \n \
+				getproperty QName(PackageNamespace(""), "loaderInfo") \n \
+				getproperty QName(PackageNamespace(""), "applicationDomain") \n \
+				pushstring "Modlib.ModdedBuilding" \n \
+				callproperty QName(PackageNamespace(""), "getDefinition"), 1 \n \
+				getlocal 6 \n \
+				callproperty QName(PackageNamespace(""), "hasGemInBuilding"), 1 \n \
+				iffalse nogem \n \
+				getlex QName(PackageNamespace("com.giab.games.gcfw"), "GV") \n \
+				getproperty QName(PackageNamespace(""), "main") \n \
+				getproperty QName(PackageNamespace(""), "bezel") \n \
+				pushstring "' + MOD_NAME + '" \n \
+				callproperty QName(PackageNamespace(""), "getModByName"), 1 \n \
+				getproperty QName(PackageNamespace(""), "loaderInfo") \n \
+				getproperty QName(PackageNamespace(""), "applicationDomain") \n \
+				pushstring "Modlib.ModdedBuilding" \n \
+				callproperty QName(PackageNamespace(""), "getDefinition"), 1 \n \
+				getlocal 6 \n \
+				getlocal1 \n \
+				callproperty QName(PackageNamespace(""), "getGemInBuilding"), 2 \n \
+				returnvalue \n \
+				nogem: \
+				');
+				
+			successfulPatch(CLASS_NAME);
+		}
+		
 		private function installIngameDestroyerCoremod(lattice: Lattice): void
 		{
 			const FILE_NAME: String = "com/giab/games/gcfw/ingame/IngameDestroyer.class.asasm";
@@ -131,7 +222,25 @@ package Modlib
 				return;
 			}
 			
-			lattice.patchFile(FILE_NAME, offset - 2, 0,
+			lattice.patchFile(FILE_NAME, offset - 8, 0, 'jump skiptypecheck');
+			
+			const SEARCH_SET_DF_BEACON_PLACEMENT: RegExp = /setproperty QName\(PackageNamespace\(""\), "dfBeaconPlacement"\)/;
+			offset = lattice.findPattern(FILE_NAME, SEARCH_SET_DF_BEACON_PLACEMENT, offset);
+			if (checkOffset(offset, CLASS_NAME, SEARCH_SET_DF_BEACON_PLACEMENT))
+			{
+				return;
+			}
+			
+			lattice.patchFile(FILE_NAME, offset - 5, 0, 'skiptypecheck:');
+			
+			const SEARCH_SETLOCAL_11: RegExp = /setlocal 11/;
+			offset = lattice.findPattern(FILE_NAME, SEARCH_SETLOCAL_11, offset);
+			if (checkOffset(offset, CLASS_NAME, SEARCH_SETLOCAL_11))
+			{
+				return;
+			}
+			
+			lattice.patchFile(FILE_NAME, offset - 2, 2,
 				' \
 				getlex QName(PackageNamespace("com.giab.games.gcfw"), "GV") \n \
 				getproperty QName(PackageNamespace(""), "main") \n \
@@ -173,7 +282,7 @@ package Modlib
 				return;
 			}
 			
-			lattice.patchFile(FILE_NAME, offset, 0, 
+			lattice.patchFile(FILE_NAME, offset + 1, 0, 
 				' \
 				getlex QName(PackageNamespace("com.giab.games.gcfw"), "GV") \n \
 				getproperty QName(PackageNamespace(""), "main") \n \
@@ -204,7 +313,7 @@ package Modlib
 				return;
 			}
 			
-			lattice.patchFile(FILE_NAME, offset, 0,
+			lattice.patchFile(FILE_NAME, offset + 1, 0,
 				' \
 				getlex QName(PackageNamespace("com.giab.games.gcfw"), "GV") \n \
 				getproperty QName(PackageNamespace(""), "main") \n \
@@ -235,7 +344,7 @@ package Modlib
 				return;
 			}
 			
-			lattice.patchFile(FILE_NAME, offset, 0,
+			lattice.patchFile(FILE_NAME, offset + 1, 0,
 				' \
 				getlex QName(PackageNamespace("com.giab.games.gcfw"), "GV") \n \
 				getproperty QName(PackageNamespace(""), "main") \n \
@@ -266,7 +375,7 @@ package Modlib
 				return;
 			}
 			
-			lattice.patchFile(FILE_NAME, offset, 0,
+			lattice.patchFile(FILE_NAME, offset + 1, 0,
 				' \
 				getlex QName(PackageNamespace("com.giab.games.gcfw"), "GV") \n \
 				getproperty QName(PackageNamespace(""), "main") \n \
@@ -297,7 +406,7 @@ package Modlib
 				return;
 			}
 			
-			lattice.patchFile(FILE_NAME, offset, 0,
+			lattice.patchFile(FILE_NAME, offset + 1, 0,
 				' \
 				getlex QName(PackageNamespace("com.giab.games.gcfw"), "GV") \n \
 				getproperty QName(PackageNamespace(""), "main") \n \
@@ -348,9 +457,12 @@ package Modlib
 				getproperty QName(PackageNamespace(""), "applicationDomain") \n \
 				pushstring "Modlib.ModdedBuilding" \n \
 				callproperty QName(PackageNamespace(""), "getDefinition"), 1 \n \
+				getlocal1 \n \
+				getlocal2 \n \
+				getlocal3 \n \
 				getlocal 4 \n \
 				getlocal 5 \n \
-				callpropvoid QName(PackageNamespace(""), "build"), 2 \
+				callpropvoid QName(PackageNamespace(""), "ehClickOnField"), 5 \
 				');
 				
 			successfulPatch(CLASS_NAME);
@@ -460,7 +572,8 @@ package Modlib
 				' \
 				trait slot QName(PackageNamespace(""), "' + Constants.MODDED_PROJECTILE_ARRAY_ID + '") type QName(PackageNamespace(""), "Array") end \n \
 				trait slot QName(PackageNamespace(""), "' + Constants.MODDED_BUILDING_COSTS_ID + '") type QName(PackageNamespace(""), "Array") end \n \
-				trait slot QName(PackageNamespace(""), "' + Constants.MODDED_BUILDING_ARRAY_ID + '") type QName(PackageNamespace(""), "Array") end \
+				trait slot QName(PackageNamespace(""), "' + Constants.MODDED_BUILDING_ARRAY_ID + '") type QName(PackageNamespace(""), "Array") end \n \
+				trait slot QName(PackageNamespace(""), "' + Constants.SELECTED_MODDED_BUILDING_ID + '") type QName(PackageNamespace(""), "Object") end \
 				');
 				
 			const SEARCH_DO_ENTER_FRAME_GENERAL: RegExp = /trait method QName\(PrivateNamespace\("com.giab.games.gcfw.ingame:IngameCore"\), "doEnterFrameGeneral"\)/;

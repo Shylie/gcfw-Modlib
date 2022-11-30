@@ -1,6 +1,6 @@
 package Modlib.API 
 {
-	import flash.display.MovieClip;
+	import flash.display.DisplayObject;
 	
 	/**
 	 * ...
@@ -9,9 +9,14 @@ package Modlib.API
 	public interface IModdedBuildingImplProvider 
 	{
 		/**
-		 * The MovieClip instance for this building type
+		 * The DisplayObject for this building type
 		 */
-		function get mc(): MovieClip;
+		function get mc(): DisplayObject;
+		
+		/**
+		 * The DisplayObject for this building type's shadow
+		 */
+		function get mcShadow(): DisplayObject;
 		
 		/**
 		 * The base building cost of this building type
