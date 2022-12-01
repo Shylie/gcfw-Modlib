@@ -140,8 +140,8 @@ package Modlib
 			if (moddedBuilding != null)
 			{
 				var mtx: Matrix = new Matrix(1, 0, 0, 1, 28 * j, 28 * i);
-				GV.ingameCore.cnt.bmpdBuildings.draw(moddedBuilding.provider.mcShadow, mtx);
-				GV.ingameCore.cnt.bmpdBuildings.draw(moddedBuilding.provider.mc, mtx);
+				GV.ingameCore.cnt.bmpdBuildings.draw(moddedBuilding.provider.mcShadow(moddedBuilding), mtx);
+				GV.ingameCore.cnt.bmpdBuildings.draw(moddedBuilding.provider.mc(moddedBuilding), mtx);
 			}
 		}
 		
@@ -557,6 +557,8 @@ package Modlib
 			if (insertedGem != null)
 			{
 				GV.ingameCore.cnt.cntRetinaHud.removeChild(mcChargeMeter);
+				insertedGem[Constants.GEM_IS_IN_MODDED_BUILDING_ID] = false;
+				insertedGem.isAmplified = false;
 				insertedGem.containingBuilding = null;
 				insertedGem.recalculateSds();
 				insertedGem = null;
@@ -598,6 +600,7 @@ package Modlib
 				positionGem();
 				
 				GV.ingameController.cnt.cntGemsInTowers.addChild(insertedGem.mc);
+				insertedGem[Constants.GEM_IS_IN_MODDED_BUILDING_ID] = true;
 				GV.ingameCalculator.amplifyGem(insertedGem, fieldX, fieldY, false);
 				
 				shotColor = ColorToolbox.hsbToRgb(insertedGem.hasColor ? [insertedGem.hueMain, 100, 100] : [0, 0, 100]);
@@ -627,7 +630,7 @@ package Modlib
 		
 		private function createProjectile(enhancement: int, target: Object, rawDamage: Number, shotColor: Array, markableForDeath: Boolean, isKillingShot: Boolean): void
 		{
-			var projectileProvider: Object = provider.projectile(enhancement);
+			var projectileProvider: Class = provider.projectile(enhancement);
 			var shotData: ShotData = (enhancement == GemEnhancementId.NONE ? insertedGem.sd4_IntensityMod : insertedGem.sd5_EnhancedOrTrapOrLantern);
 			
 			var projectile: ModdedProjectile = new ModdedProjectile(projectileProvider, this, shotColor, shotData, target, rawDamage, markableForDeath, isKillingShot, provider.isRawDamage(enhancement));

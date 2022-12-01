@@ -57,10 +57,13 @@ package Modlib
 		public function unload(): void 
 		{
 			removeEventListeners();
+			
+			Registry.unregisterAll();
 		}
 		
 		public function loadCoreMod(lattice: Lattice): void 
 		{
+			installGemCoremod(lattice);
 			installIngameSpellCasterCoremod(lattice);
 			installIngameControllerCoremod(lattice);
 			installIngameDestroyerCoremod(lattice);
@@ -112,6 +115,26 @@ package Modlib
 				GV.vfxEngine.createFloatingText2(GV.main.mouseX, GV.main.mouseY, buildingPageIndex.toString(), 0xFF8000, 12, "center", 0, 0, 0, 0, 50, 0, 50);
 				SB.playSound("sndalert");
 			}
+		}
+		
+		private function installGemCoremod(lattice: Lattice): void
+		{
+			const FILE_NAME: String = "com/giab/games/gcfw/entity/Gem.class.asasm";
+			const CLASS_NAME: String = "Gem";
+			
+			const SEARCH_MANA_LEECHED: RegExp = /trait slot QName\(PackageNamespace\(""\), "manaLeeched"\)/;
+			var offset: int = lattice.findPattern(FILE_NAME, SEARCH_MANA_LEECHED);
+			if (checkOffset(offset, CLASS_NAME, SEARCH_MANA_LEECHED))
+			{
+				return;
+			}
+			
+			lattice.patchFile(FILE_NAME, offset - 1, 0,
+				' \
+				trait slot QName(PackageNamespace(""), "' + Constants.GEM_IS_IN_MODDED_BUILDING_ID + '") type QName(PackageNamespace(""), "Boolean") value False() end \
+				');
+				
+			successfulPatch(CLASS_NAME);
 		}
 		
 		private function installIngameSpellCasterCoremod(lattice: Lattice): void
@@ -199,6 +222,55 @@ package Modlib
 				returnvalue \n \
 				nogem: \
 				');
+				
+			const SEARCH_DROP_GEM_UNDER_CURSOR_TO_INVENTORY: RegExp = /trait method QName\(PackageNamespace\(""\), "dropGemUnderPointerToInventory"\)/;
+			offset = lattice.findPattern(FILE_NAME, SEARCH_DROP_GEM_UNDER_CURSOR_TO_INVENTORY);
+			if (checkOffset(offset, CLASS_NAME, SEARCH_DROP_GEM_UNDER_CURSOR_TO_INVENTORY))
+			{
+				return;
+			}
+			
+			const SEARCH_IS_IN_LANTERN: RegExp = /getproperty QName\(PackageNamespace\(""\), "isInLantern"\)/;
+			offset = lattice.findPattern(FILE_NAME, SEARCH_IS_IN_LANTERN, offset);
+			if (checkOffset(offset, CLASS_NAME, SEARCH_IS_IN_LANTERN))
+			{
+				return;
+			}
+			
+			const SEARCH_IF_FALSE: RegExp = /iffalse/;
+			offset = lattice.findPattern(FILE_NAME, SEARCH_IF_FALSE, offset);
+			if (checkOffset(offset, CLASS_NAME, SEARCH_IF_FALSE))
+			{
+				return;
+			}
+			
+			lattice.patchFile(FILE_NAME, offset - 1, 1,
+				' \
+				dup \n \
+				iftrue truebranch \n \
+				pop \n \
+				getlocal1 \n \
+				getproperty QName(PackageNamespace(""), "' + Constants.GEM_IS_IN_MODDED_BUILDING_ID + '") \n \
+				convert_b \n \
+				truebranch: \n \
+				iffalse falsebranch: \
+				');
+				
+			const SEARCH_REDRAW_TRAPS: RegExp = /callpropvoid QName\(PackageNamespace\(""\), "redrawTraps"\), 0/;
+			offset = lattice.findPattern(FILE_NAME, SEARCH_REDRAW_TRAPS, offset);
+			if (checkOffset(offset, CLASS_NAME, SEARCH_REDRAW_TRAPS))
+			{
+				return;
+			}
+			
+			const SEARCH_GET_LOCAL_1: RegExp = /getlocal1/;
+			offset = lattice.findPattern(FILE_NAME, SEARCH_GET_LOCAL_1, offset);
+			if (checkOffset(offset, CLASS_NAME, SEARCH_GET_LOCAL_1))
+			{
+				return;
+			}
+			
+			lattice.patchFile(FILE_NAME, offset - 2, 1, 'falsebranch:');
 				
 			successfulPatch(CLASS_NAME);
 		}

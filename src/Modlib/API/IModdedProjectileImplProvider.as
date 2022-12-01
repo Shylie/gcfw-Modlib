@@ -12,17 +12,12 @@ package Modlib.API
 		/**
 		 * Returns a new instance of the projectile's MovieClip
 		 */
-		function get mc(): DisplayObject;
-		
-		/**
-		 * Should the projectile should hit its target
-		 */
-		function hit(projectile: ModdedProjectile): Boolean;
+		function mc(projectile: ModdedProjectile): DisplayObject;
 		
 		/**
 		 * Update the projectile
 		 * @param projectile
 		 */
-		function update(projectile: ModdedProjectile): void
+		function update(projectile: ModdedProjectile, speedMultiplier: Number): Boolean
 	}
 }

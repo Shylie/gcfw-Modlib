@@ -1,5 +1,6 @@
 package Modlib.API 
 {
+	import Modlib.ModdedBuilding;
 	import flash.display.DisplayObject;
 	
 	/**
@@ -11,12 +12,12 @@ package Modlib.API
 		/**
 		 * The DisplayObject for this building type
 		 */
-		function get mc(): DisplayObject;
+		function mc(building: ModdedBuilding): DisplayObject;
 		
 		/**
 		 * The DisplayObject for this building type's shadow
 		 */
-		function get mcShadow(): DisplayObject;
+		function mcShadow(building: ModdedBuilding): DisplayObject;
 		
 		/**
 		 * The base building cost of this building type
@@ -120,6 +121,6 @@ package Modlib.API
 		 * @param enhancement Type of enhancement to get the projectile for
 		 * @return Projectile implementation
 		 */
-		function projectile(enhancement: int): IModdedProjectileImplProvider;
+		function projectile(enhancement: int): Class;
 	}
 }

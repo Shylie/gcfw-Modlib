@@ -23,17 +23,9 @@ package Modlib
 			BUILDING_REGISTRY.register(new RegistryEntry(buildingProvider, name));
 		}
 		
-		/**
-		 * Unregister a building
-		 * @param name The name of the building to unregister.
-		 */
-		public static function unregisterBuilding(name: String): void
+		internal static function unregisterAll(): void
 		{
-			CONFIG::debug
-			{
-				ModlibMod.instance.logger.log("", "Unregistering building: " + name);
-			}
-			BUILDING_REGISTRY.unregister(name);
+			BUILDING_REGISTRY.unregisterAll();
 		}
 		
 		internal function getEntry(id: int): Object
@@ -52,21 +44,18 @@ package Modlib
 			entries.sortOn(["name"]);
 		}
 		
-		private function unregister(name: String): void
+		CONFIG::release
+		private function unregisterAll(): void
 		{
-			for (var i: int = 0; i < entries.length; i++)
+			entries = [];
+		}
+		
+		CONFIG::debug
+		private function unregisterAll(): void
+		{
+			while (entries.length > 0)
 			{
-				if (name == (entries[i] as RegistryEntry).name)
-				{
-					if (i == entries.length - 1)
-					{
-						entries.pop();
-					}
-					else
-					{
-						entries[i] = entries.pop();
-					}
-				}
+				ModlibMod.instance.logger.log("", "Unregistering building: " + (entries.pop() as RegistryEntry).name);
 			}
 		}
 	}

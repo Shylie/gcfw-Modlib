@@ -1,23 +1,25 @@
 package Modlib 
 {
-	import Modlib.API.IModdedProjectileImplProvider;
 	import com.giab.common.utils.ColorToolbox;
 	import com.giab.games.gcfw.GV;
 	import com.giab.games.gcfw.entity.Apparition;
 	import com.giab.games.gcfw.entity.Beacon;
 	import com.giab.games.gcfw.entity.Gem;
+	import com.giab.games.gcfw.entity.Guardian;
 	import com.giab.games.gcfw.entity.JarOfWasps;
 	import com.giab.games.gcfw.entity.ManaShard;
+	import com.giab.games.gcfw.entity.Monster;
 	import com.giab.games.gcfw.entity.MonsterNest;
 	import com.giab.games.gcfw.entity.Shadow;
 	import com.giab.games.gcfw.entity.ShadowProjectile;
 	import com.giab.games.gcfw.entity.Specter;
 	import com.giab.games.gcfw.entity.Tomb;
+	import com.giab.games.gcfw.entity.WallBreaker;
 	import com.giab.games.gcfw.entity.WatchTower;
+	import com.giab.games.gcfw.entity.WizardHunter;
 	import com.giab.games.gcfw.entity.Wraith;
 	import com.giab.games.gcfw.struct.ShotData;
 	import flash.display.MovieClip;
-	import flash.geom.ColorTransform;
 	
 	/**
 	 * ...
@@ -38,6 +40,7 @@ package Modlib
 		public var targetOffsetY: Number;
 		public var damage: Number;
 		public var isRawDamage: Boolean;
+		public var building: ModdedBuilding;
 		
 		public static function doEnterFrameAll(speedMultiplier: Number): void
 		{
@@ -48,21 +51,13 @@ package Modlib
 			}
 		}
 		
-		public function ModdedProjectile(provider: Object, building: ModdedBuilding, shotColor: Array, shotData: ShotData, target: Object, damage: Number, targetMarkableForDeath: Boolean, killingShot: Boolean, rawDamage: Boolean)
+		public function ModdedProjectile(providerClass: Class, building: ModdedBuilding, shotColor: Array, shotData: ShotData, target: Object, damage: Number, targetMarkableForDeath: Boolean, killingShot: Boolean, rawDamage: Boolean)
 		{
-			this.provider = provider;
-			
 			isKillingShot = killingShot;
 			isTargetMarkableForDeath = targetMarkableForDeath;
 			
-			this.mc = provider.mc;
-			if (mc != null && building.insertedGem.hasColor)
-			{
-				mc.filters = ColorToolbox.calculateColorMatrixFilter(ColorToolbox.rgbToHsb(shotColor));
-				GV.ingameController.cnt.cntShots.addChild(mc);
-			}
-			
 			this.shotData = shotData;
+			this.building = building;
 			originGem = building.insertedGem;
 			this.target = target;
 			this.damage = damage;
@@ -102,14 +97,22 @@ package Modlib
 				targetOffsetX = 50 + Math.random() * 8 - 4;
 				targetOffsetY = 8 + Math.random() * 8 - 4;
 			}
+			
+			provider = new providerClass(this);
+			
+			mc = provider.mc(this);
+			if (mc != null && building.insertedGem.hasColor)
+			{
+				mc.filters = ColorToolbox.calculateColorMatrixFilter(ColorToolbox.rgbToHsb(shotColor));
+				GV.ingameController.cnt.cntShots.addChild(mc);
+			}
 		}
 		
 		public function doEnterFrame(speedMultiplier: Number): void
 		{
 			if (speedMultiplier > 0)
 			{
-				provider.update(this);
-				if (provider.hit(this))
+				if (provider.update(this, speedMultiplier))
 				{
 					if (isRawDamage)
 					{
@@ -118,6 +121,28 @@ package Modlib
 					else
 					{
 						target.sufferShotDamage(shotData, originGem, false, damage, isKillingShot);
+					}
+					
+					if (target is Monster || target is Apparition || target is Guardian || target is Shadow || target is Specter || target is Wraith || target is WizardHunter || target is WallBreaker)
+					{
+						var manaLeeched: Number = shotData.manaGainPerHit.g() * (target.isInWhiteout ? 1 + 0.01 * GV.ingameCore.spWhiteoutManaLeechBoostPct.g() : 1);
+						GV.ingameStats.manaFromManaGainGems += GV.ingameCore.changeMana(manaLeeched, true, false);
+						originGem.manaLeeched += manaLeeched;
+						
+						if (target.isBleeding)
+						{
+							GV.ingameStats.manaLeechedFromBleedingMonsters += manaLeeched;
+						}
+						
+						if (target.isPoisoned)
+						{
+							GV.ingameStats.manaLeechedFromPoisonedMonsters += manaLeeched;
+						}
+						
+						if (target.isInWhiteout)
+						{
+							GV.ingameStats.manaLeechedFromWhitedOutMonsters += manaLeeched;
+						}
 					}
 					
 					if (mc != null)
