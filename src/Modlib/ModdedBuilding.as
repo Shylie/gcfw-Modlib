@@ -182,8 +182,6 @@ package Modlib
 		
 		public static function build(provider: int, x: int, y: int): void
 		{
-			var actualProvider: Object = Registry.BUILDING_REGISTRY.getEntry(provider);
-			
 			if (GV.ingameController.isBuildingBuildPointFree(x, y, BuildingType.TOWER))
 			{
 				if (GV.ingameCore.getMana() < GV.ingameCore[Constants.MODDED_BUILDING_COSTS_ID][provider] as Number)
@@ -202,7 +200,7 @@ package Modlib
 					{
 						GV.ingameCore.changeMana(-Math.max(0, GV.ingameCore[Constants.MODDED_BUILDING_COSTS_ID][provider] as Number), false, true);
 					}
-					GV.ingameCore[Constants.MODDED_BUILDING_COSTS_ID][provider] += actualProvider.buildCostIncrease();
+					GV.ingameCore[Constants.MODDED_BUILDING_COSTS_ID][provider] += Registry.BUILDING_REGISTRY.getEntryData(provider).buildCostIncrease;
 					
 					GV.ingameCreator.dfBeaconPlacement = true;
 					
@@ -378,7 +376,7 @@ package Modlib
 			
 			for (var i: int = 0; i < Registry.BUILDING_REGISTRY.entryCount; i++)
 			{
-				tempCosts.push(Registry.BUILDING_REGISTRY.getEntry(i).buildCostBase);
+				tempCosts.push(Registry.BUILDING_REGISTRY.getEntryData(i).baseBuildCost);
 			}
 			
 			GV.ingameCore[Constants.MODDED_BUILDING_COSTS_ID] = tempCosts;
@@ -391,7 +389,7 @@ package Modlib
 		
 		public function ModdedBuilding(provider: int, fieldX: int, fieldY: int)
 		{
-			this.provider = Registry.BUILDING_REGISTRY.getEntry(provider);
+			this.provider = new (Registry.BUILDING_REGISTRY.getEntry(provider))(this);
 			
 			this.fieldX = fieldX;
 			this.fieldY = fieldY;
@@ -633,7 +631,7 @@ package Modlib
 			var projectileProvider: Class = provider.projectile(enhancement);
 			var shotData: ShotData = (enhancement == GemEnhancementId.NONE ? insertedGem.sd4_IntensityMod : insertedGem.sd5_EnhancedOrTrapOrLantern);
 			
-			var projectile: ModdedProjectile = new ModdedProjectile(projectileProvider, this, shotColor, shotData, target, rawDamage, markableForDeath, isKillingShot, provider.isRawDamage(enhancement));
+			var projectile: ModdedProjectile = new ModdedProjectile(projectileProvider, this, shotData, target, rawDamage, markableForDeath, isKillingShot, provider.isRawDamage(enhancement));
 			
 			(GV.ingameCore[Constants.MODDED_PROJECTILE_ARRAY_ID] as Array).push(projectile);
 		}

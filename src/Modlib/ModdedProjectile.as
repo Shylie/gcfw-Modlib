@@ -20,6 +20,7 @@ package Modlib
 	import com.giab.games.gcfw.entity.Wraith;
 	import com.giab.games.gcfw.struct.ShotData;
 	import flash.display.MovieClip;
+	import flash.geom.ColorTransform;
 	
 	/**
 	 * ...
@@ -33,6 +34,7 @@ package Modlib
 		public var shotData: ShotData;
 		public var target: Object;
 		public var rgb: Array;
+		public var ctr: ColorTransform;
 		public var originGem: Gem;
 		public var isTargetMarkableForDeath: Boolean;
 		public var isKillingShot: Boolean;
@@ -51,7 +53,7 @@ package Modlib
 			}
 		}
 		
-		public function ModdedProjectile(providerClass: Class, building: ModdedBuilding, shotColor: Array, shotData: ShotData, target: Object, damage: Number, targetMarkableForDeath: Boolean, killingShot: Boolean, rawDamage: Boolean)
+		public function ModdedProjectile(providerClass: Class, building: ModdedBuilding, shotData: ShotData, target: Object, damage: Number, targetMarkableForDeath: Boolean, killingShot: Boolean, rawDamage: Boolean)
 		{
 			isKillingShot = killingShot;
 			isTargetMarkableForDeath = targetMarkableForDeath;
@@ -62,40 +64,43 @@ package Modlib
 			this.target = target;
 			this.damage = damage;
 			isRawDamage = rawDamage;
-			targetOffsetX = 0;
-			targetOffsetY = 0;
+			targetOffsetX = 50;
+			targetOffsetY = 8;
+			
+			rgb = building.shotColor;
+			ctr = building.ctrShot;
 			
 			var isTargetAir: Boolean = target is Apparition || target is Wraith || target is Specter || target is Shadow || target is ShadowProjectile;
 			if (isTargetAir)
 			{
-				targetOffsetX = Math.random() * 50 - 25;
-				targetOffsetY = Math.random() * 50 - 25;
+				targetOffsetX += Math.random() * 50 - 25;
+				targetOffsetY += Math.random() * 50 - 25;
 			}
 			
 			if (target is ManaShard)
 			{
-				targetOffsetX = 50 + Math.random() * [8, 30, 56][ManaShard(target).size] - [4, 15, 28][ManaShard(target).size];
-				targetOffsetY = 8 + Math.random() * [8, 30, 56][ManaShard(target).size] - [4, 15, 28][ManaShard(target).size];
+				targetOffsetX += Math.random() * [8, 30, 56][ManaShard(target).size] - [4, 15, 28][ManaShard(target).size];
+				targetOffsetY += Math.random() * [8, 30, 56][ManaShard(target).size] - [4, 15, 28][ManaShard(target).size];
 			}
 			else if (target is Beacon)
 			{
-				targetOffsetX = 50 + Math.random() * 8 - 4;
-				targetOffsetY = 8 + Math.random() * 8 - 4;
+				targetOffsetX += Math.random() * 8 - 4;
+				targetOffsetY += Math.random() * 8 - 4;
 			}
 			else if (target is Tomb || target is MonsterNest)
 			{
-				targetOffsetX = 50 + Math.random() * 56 - 28;
-				targetOffsetY = 8 + Math.random() * 56 - 28;
+				targetOffsetX += Math.random() * 56 - 28;
+				targetOffsetY += Math.random() * 56 - 28;
 			}
 			else if (target is WatchTower)
 			{
-				targetOffsetX = 50 + Math.random() * 28 - 14;
-				targetOffsetY = 8 + Math.random() * 28 - 14;
+				targetOffsetX += Math.random() * 28 - 14;
+				targetOffsetY += Math.random() * 28 - 14;
 			}
 			else if (target is JarOfWasps)
 			{
-				targetOffsetX = 50 + Math.random() * 8 - 4;
-				targetOffsetY = 8 + Math.random() * 8 - 4;
+				targetOffsetX += Math.random() * 8 - 4;
+				targetOffsetY += Math.random() * 8 - 4;
 			}
 			
 			provider = new providerClass(this);
@@ -103,7 +108,7 @@ package Modlib
 			mc = provider.mc(this);
 			if (mc != null && building.insertedGem.hasColor)
 			{
-				mc.filters = ColorToolbox.calculateColorMatrixFilter(ColorToolbox.rgbToHsb(shotColor));
+				mc.filters = ColorToolbox.calculateColorMatrixFilter(ColorToolbox.rgbToHsb(rgb));
 				GV.ingameController.cnt.cntShots.addChild(mc);
 			}
 		}
