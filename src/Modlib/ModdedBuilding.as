@@ -87,7 +87,6 @@ package Modlib
 		
 		public static function initiateCastBuild(offset: int): Boolean
 		{
-			
 			if (ModlibMod.instance.buildingPageIndex == 0)
 			{
 				return false;
@@ -389,8 +388,6 @@ package Modlib
 		
 		public function ModdedBuilding(provider: int, fieldX: int, fieldY: int)
 		{
-			this.provider = new (Registry.BUILDING_REGISTRY.getEntry(provider))(this);
-			
 			this.fieldX = fieldX;
 			this.fieldY = fieldY;
 			x = fieldX * 28 + 28;
@@ -405,6 +402,8 @@ package Modlib
 			mcChargeMeter.fullCharge.visible = false;
 			
 			isDestroyed = false;
+			
+			this.provider = new (Registry.BUILDING_REGISTRY.getEntry(provider))(this);
 		}
 		
 		public function select(): void
@@ -516,7 +515,7 @@ package Modlib
 										enhancedTargets = acquireNewCreatureTargets(true);
 										if (enhancedTargets.length == 0)
 										{
-											enhancedTimeUntilNextTargetCheck = provider.timeBetweenTargetChecks(GemEnhancementId.NONE)
+											enhancedTimeUntilNextTargetCheck = provider.timeBetweenTargetChecks(insertedGem.enhancementType);
 										}
 										else
 										{
