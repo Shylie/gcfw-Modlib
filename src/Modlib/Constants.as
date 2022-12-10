@@ -1,5 +1,7 @@
 package Modlib 
 {
+	import com.giab.games.gcfw.GV;
+	
 	/**
 	 * ...
 	 * @author Shy
@@ -20,10 +22,20 @@ package Modlib
 		public static const GEM_IS_IN_MODDED_BUILDING_ID: String = "isInModdedBuilding";
 		
 		public static const BUILDING_REGISTRY_ACTION_STATUS_OFFSET: int = 1500;
-		public static const ACTIONSTATUS_DRAGGING_GEM_FROM_MODDEDBUILDING_TO_COMBINE: int = 1000;
-		public static const ACTIONSTATUS_DRAGGING_GEM_FROM_MODDEDBUILDING_TO_THROW: int = 1001;
-		public static const ACTIONSTATUS_DRAGGING_GEM_FROM_MODDEDBUILDING_IDLE: int = 1002;
+		public static const ACTIONSTATUS_DRAGGING_GEM_FROM_MODDEDBUILDING_IDLE: int = 306;
+		public static const ACTIONSTATUS_DRAGGING_GEM_FROM_MODDEDBUILDING_TO_THROW: int = 406;
+		public static const ACTIONSTATUS_DRAGGING_GEM_FROM_MODDEDBUILDING_TO_COMBINE: int = 506;
 		
 		public function Constants() { }
+		
+		public static function isDraggingModded(): Boolean
+		{
+			return GV.ingameCore.actionStatus >= ACTIONSTATUS_DRAGGING_GEM_FROM_MODDEDBUILDING_IDLE && GV.ingameCore.actionStatus <= ACTIONSTATUS_DRAGGING_GEM_FROM_MODDEDBUILDING_TO_COMBINE;
+		}
+		
+		public static function isDraggingToThrowModded(): Boolean
+		{
+			return GV.ingameCore.actionStatus == ACTIONSTATUS_DRAGGING_GEM_FROM_MODDEDBUILDING_TO_THROW;
+		}
 	}
 }
