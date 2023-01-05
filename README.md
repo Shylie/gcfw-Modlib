@@ -12,7 +12,7 @@ See the changelog [here](https://github.com/Shylie/gcfw-Modlib/blob/main/CHANGEL
 **To install the mod**, grab a release from [here](https://github.com/Shylie/gcfw-Modlib/releases/latest).
 Drop `Modlib-x.x.x.swf` into the `Mods` folder in the game folder (Right click on the game in your steam library -> Properties -> Browse Local Files).
 
-**If there is no `Mods` folder you need to install [Bezel Mod Loader](https://github.com/gemforce-team/BezelModLoader) first.
+**If there is no `Mods` folder you need to install [Bezel Mod Loader](https://github.com/gemforce-team/BezelModLoader) first.**
 
 # Uninstalling the Mod
 Delete `Modlib-x.x.x.swf` from the `Mods` folder.
